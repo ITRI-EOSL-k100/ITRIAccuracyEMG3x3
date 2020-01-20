@@ -13,6 +13,9 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.EntryXComparator;
+
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,20 +35,15 @@ public class MainActivity extends AppCompatActivity {
         btn1x3 = findViewById(R.id.button_1x3);
         btn3x3 = findViewById(R.id.button_3x3);
 
-        lineChartAccuracy.setNoDataText("No Data available");
+        lineChartAccuracySetting();
 
-//        lineChartAccuracy.getDescription().setEnabled(true);
-//        lineChartAccuracy.getDescription().setText("Real Time EMG Accuracy Plot  (%) ");
-        lineChartAccuracy.setTouchEnabled(false); // 設定是否可以觸控
-        lineChartAccuracy.setDragEnabled(true); // 是否可以拖拽
-        lineChartAccuracy.setScaleEnabled(false); // 是否可以縮放 x和y軸, 預設是true
-        lineChartAccuracy.setDrawGridBackground(true); // 背景網格
-        lineChartAccuracy.setPinchZoom(false); //設定x軸和y軸能否同時縮放。預設是否
-        lineChartAccuracy.setBackgroundColor(Color.WHITE);
+        LineData lineDataAccuracy = new  LineData();
+        lineDataAccuracy.setValueTextColor(Color.BLACK);
+        lineChartAccuracy.setData(lineDataAccuracy);
 
-        LineData lineData = new  LineData();
-        lineData.setValueTextColor(Color.BLACK);
-        lineChartAccuracy.setData(lineData);
+
+
+
 
         Legend legendAccuracy = lineChartAccuracy.getLegend();
         legendAccuracy.setForm(Legend.LegendForm.CIRCLE);
@@ -58,13 +56,33 @@ public class MainActivity extends AppCompatActivity {
         YAxis yAxis = lineChartAccuracy.getAxisLeft();
         yAxis.setTextColor(Color.BLACK);
         yAxis.setDrawGridLines(true);
-//        yAxis.setAxisMinimum(0f);
-//        yAxis.setAxisMaximum(100f);
+        yAxis.setAxisMinimum(0f);
+        yAxis.setAxisMaximum(100f);
+
+        YAxis leftAxis = lineChartAccuracy.getAxisRight();
+        leftAxis.setEnabled(false);
 
         lineChartAccuracy.setDrawBorders(true);
         lineChartAccuracy.getXAxis().setDrawGridLines(true);
 //        chartAccuracyStartPlot();
     }
+
+    private void lineChartAccuracySetting() {
+        lineChartAccuracy.setNoDataText("No Data available");
+        lineChartAccuracy.getDescription().setEnabled(true);
+        lineChartAccuracy.getDescription().setText("Real Time EMG Accuracy Plot  (%) ");
+//        lineChartRMS.setDescription("Real Time EMG Accuracy Plot  (%) ");//2.1.5
+        lineChartAccuracy.setTouchEnabled(false); // 設定是否可以觸控
+        lineChartAccuracy.setDragEnabled(true); // 是否可以拖拽
+        lineChartAccuracy.setScaleEnabled(false); // 是否可以縮放 x和y軸, 預設是true
+        lineChartAccuracy.setDrawGridBackground(true); // 背景網格
+        lineChartAccuracy.setPinchZoom(false); //設定x軸和y軸能否同時縮放。預設是否
+        lineChartAccuracy.setBackgroundColor(Color.WHITE);
+    }
+
+
+
+
 
     @Override
     protected void onResume() {
@@ -77,12 +95,12 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable(){
                         @Override
                         public void run () {
-//                            addAccuracyEntry();
-                            addEntry();
+                            addAccuracyEntry();
+//                            addRMSEntry();
                         }
                     });
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(50);
                     }catch (InterruptedException e){
 
                     }
@@ -92,29 +110,32 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void addEntry(){
-        LineData data = lineChartAccuracy.getData();
-        if (data != null){
-            LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
-            if (set == null){
-                set = createSet();
-                data.addDataSet(set);
+    private void addAccuracyEntry(){
+        LineData dataAccuracy = lineChartAccuracy.getData();
+        if (dataAccuracy != null){
+            LineDataSet setAccuracy = (LineDataSet) dataAccuracy.getDataSetByIndex(0);
+            if (setAccuracy == null){
+                setAccuracy = createSetAccuracy();
+                dataAccuracy.addDataSet(setAccuracy);
             }
-            data.addXValue("");
-//            data.addEntry(
-//                    new Entry((float) (Math.random()*120) + 5f, set.getEntryCount()),0);
-            int random = 100 -(int)(Math.random()*100+1);
-            data.addEntry(
-                    new Entry(random , set.getEntryCount()), 0);
+            int random = (int)(Math.random()*100+1);
+            dataAccuracy.addEntry(new Entry(setAccuracy.getEntryCount(), random), 0);
             lineChartAccuracy.notifyDataSetChanged();
+
+            dataAccuracy.notifyDataChanged();
             lineChartAccuracy.setVisibleXRange(100,100);
-            lineChartAccuracy.moveViewToX(data.getXValCount()-99);
+            lineChartAccuracy.setMaxVisibleValueCount(150);
+            lineChartAccuracy.moveViewToX(dataAccuracy.getEntryCount());
+//            moveViewTo(float xIndex, float yValue, AxisDependency axis): 这将移动当前视口的左侧（边缘）到指定的x索引在x轴上，并且中心视口提供的y轴上指定的y值
+//                                                          （相当于结合了setVisibleXRange(...)和setVisibleYRange(...)）
         }
 
     }
 
-    private LineDataSet createSet() {
-        LineDataSet set  = new LineDataSet(null,"Dyanmic Data");
+
+
+    private LineDataSet createSetAccuracy() {
+        LineDataSet set  = new LineDataSet(null,"EMG Accuracy Data");
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
         set.setLineWidth(3f);
         set.setColor(Color.MAGENTA);
@@ -125,4 +146,5 @@ public class MainActivity extends AppCompatActivity {
         set.setCubicIntensity(1f);
         return set;
     }
+
 }
